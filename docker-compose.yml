@@ -61,21 +61,23 @@ services:
   emulator:
     image: python:3.11-slim
     container_name: emulator
-    working_dir: /app
+    working_dir: /app/emulation
     volumes:
-      - ./emulator:/app:ro
-    command: >
-      bash -lc "
-        pip install --no-cache-dir -r requirements.txt &&
-        python mqtt_emulator_subtopics.py
-          --host ${EMULATOR_HOST}
-          --port ${EMULATOR_PORT}
-          --site ${EMULATOR_SITE}
-          --room ${EMULATOR_ROOM}
-          --devices ${EMULATOR_DEVICES}
-          --dp-channels ${EMULATOR_DP_CHANNELS}
-          --interval ${EMULATOR_INTERVAL}
-      "
+      - ./emulation:/app/emulation:ro
+    command:
+      - bash
+      - -lc
+      - |
+        set -e
+        pip install --no-cache-dir -r requirements.txt
+        python mqtt_emulator.py \
+          --host "${EMULATOR_HOST}" \
+          --port "${EMULATOR_PORT}" \
+          --site "${EMULATOR_SITE}" \
+          --room "${EMULATOR_ROOM}" \
+          --devices "${EMULATOR_DEVICES}" \
+          --dp-channels "${EMULATOR_DP_CHANNELS}" \
+          --interval "${EMULATOR_INTERVAL}"
     depends_on:
       - mosquitto
     restart: unless-stopped

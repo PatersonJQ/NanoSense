@@ -51,24 +51,17 @@ It supports any MQTT-capable device and includes an optional Python-based **emul
 
 ### 1️⃣ Requirements
 
-- Docker & Docker Compose installed  
-- Git installed
-
-Example (Ubuntu):
-```bash
-sudo apt install docker.io docker-compose git
-sudo usermod -aG docker $USER
-```
-Log out/in so group takes effect.
-
----
+Windows Docker Desktop App
 
 ### 2️⃣ Clone & Start the Stack
 
 ```bash
 git clone https://github.com/YourOrg/nanosense.git
 cd nanosense
+-------- No Demo Data --------
 docker compose up -d
+--------Demo Date --------
+docker compose --profile demo up -d
 ```
 
 Check containers:
@@ -158,44 +151,6 @@ iot/<site>/<room>/<device>/telemetry/sps30     # pm1_0,pm2_5,pm4_0,pm10
 iot/<site>/<room>/<device>/telemetry/dp/<ch>   # dp_pa
 iot/<site>/<room>/<device>/status              # retained
 ```
-
----
-
-## 🧩 DP channel mapping (optional)
-
-If you use numeric channels (1,2) but want friendly names (`hepa`,`wafer`) in InfluxDB:
-
-```toml
-[[processors.starlark]]
-  namepass=["diff_pressure"]
-  source = '''
-def apply(metric):
-    ch = metric.tags.get("channel","")
-    if ch=="1": metric.tags["dp_path"]="hepa"
-    elif ch=="2": metric.tags["dp_path"]="wafer"
-    return metric
-'''
-```
-
-Or publish names using `--dp-channels hepa,wafer`.
-
----
-
-## 🧪 BME688 extra fields in Telegraf
-
-Ensure your `telegraf.conf` includes:
-```toml
-[[inputs.mqtt_consumer.json_v2.field]]
-  path="iaq"
-  type="float"
-[[inputs.mqtt_consumer.json_v2.field]]
-  path="voc_index"
-  type="float"
-[[inputs.mqtt_consumer.json_v2.field]]
-  path="co2_eq"
-  type="float"
-```
-
 ---
 
 ## 📊 Grafana Dashboards
@@ -209,7 +164,6 @@ Recommended views:
 - IAQ vs PM₂.₅ dual-axis
 - VOC / CO₂eq trends
 - Per-device tiles (temperature, humidity, status)
-
 ---
 
 ## 🧑‍💻 Development tips
@@ -218,15 +172,4 @@ Restart services after config changes:
 ```bash
 docker compose restart telegraf
 docker compose restart grafana
-docker compose --profile demo up -d
 ```
-
-Run emulator again:
-```bash
-. .venv/bin/activate
-python emulator/mqtt_emulator_subtopics.py ...
-```
-
----
-
-Happy measuring 🚀
