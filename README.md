@@ -56,7 +56,7 @@ Windows Docker Desktop App
 ### 2️⃣ Clone & Start the Stack
 
 ```bash
-git clone https://github.com/YourOrg/nanosense.git
+git clone https://github.com/PatersonJQ/NanoSense.git
 cd nanosense
 -------- No Demo Data --------
 docker compose up -d
