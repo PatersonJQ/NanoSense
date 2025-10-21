@@ -58,6 +58,31 @@ services:
     depends_on:
       - influxdb
 
+  emulator:
+    image: python:3.11-slim
+    container_name: emulator
+    working_dir: /app
+    volumes:
+      - ./emulator:/app:ro
+    command: >
+      bash -lc "
+        pip install --no-cache-dir -r requirements.txt &&
+        python mqtt_emulator_subtopics.py
+          --host ${EMULATOR_HOST}
+          --port ${EMULATOR_PORT}
+          --site ${EMULATOR_SITE}
+          --room ${EMULATOR_ROOM}
+          --devices ${EMULATOR_DEVICES}
+          --dp-channels ${EMULATOR_DP_CHANNELS}
+          --interval ${EMULATOR_INTERVAL}
+      "
+    depends_on:
+      - mosquitto
+    restart: unless-stopped
+    networks:
+      - iot
+    profiles: ["demo"]
+
 networks:
   iot:
 

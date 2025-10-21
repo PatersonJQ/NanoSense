@@ -1,136 +1,232 @@
-# Easy IoT data infrastructure setup via docker
+# NanoSense — Local IoT Telemetry Stack  
+*(MQTT → Telegraf → InfluxDB → Grafana)*
 
-Based on https://github.com/iothon/docker-compose-mqtt-influxdb-grafana and https://lucassardois.medium.com/handling-iot-data-with-mqtt-telegraf-influxdb-and-grafana-5a431480217
+A self-contained Docker-based system for collecting, storing, and visualizing sensor data locally.  
+It supports any MQTT-capable device and includes an optional Python-based **emulator** for generating demo data.
 
-This docker compose installs and sets up:
-- [Eclipse Mosquitto](https://mosquitto.org) - An open source MQTT broker to collect your data via MQTT protocol
-- [InfluxDB](https://www.influxdata.com/) - The Time Series Data Platform to store your data in time series database 
-- [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/) - The open source server agent to connect Mosquitto and InfluxDB together
-- [Grafana](https://grafana.com/) - The open observability platform to draw some graphs and more
+---
 
-# Setup process
-## Install docker
+## 📦 Architecture Overview
 
 ```
-sudo apt install docker.io
-sudo apt install docker-compose 
+         ┌──────────────────────┐
+         │  MQTT Emulator (opt) │
+         │  BME688 / SPS30 / DP │
+         └──────────┬───────────┘
+                    │  MQTT
+                    ▼
+             ┌──────────────┐
+             │  Mosquitto   │  ← MQTT Broker
+             └──────────────┘
+                    │
+                    ▼
+             ┌──────────────┐
+             │   Telegraf   │  ← MQTT → InfluxDB bridge
+             └──────────────┘
+                    │
+                    ▼
+             ┌──────────────┐
+             │   InfluxDB   │  ← Time-series database
+             └──────────────┘
+                    │
+                    ▼
+             ┌──────────────┐
+             │   Grafana    │  ← Dashboards / Visualization
+             └──────────────┘
 ```
 
+---
+
+## 🧰 Services Installed
+
+- **Mosquitto** — MQTT broker
+- **Telegraf** — MQTT→InfluxDB bridge & metric processing
+- **InfluxDB 2.x** — time‑series database
+- **Grafana** — dashboards & visualization
+- *(optional)* **Python Emulator** — publishes demo data
+
+---
+
+## 🚀 Setup
+
+### 1️⃣ Requirements
+
+- Docker & Docker Compose installed  
+- Git installed
+
+Example (Ubuntu):
+```bash
+sudo apt install docker.io docker-compose git
+sudo usermod -aG docker $USER
 ```
-sudo usermod -aG docker iothon
+Log out/in so group takes effect.
+
+---
+
+### 2️⃣ Clone & Start the Stack
+
+```bash
+git clone https://github.com/YourOrg/nanosense.git
+cd nanosense
+docker compose up -d
 ```
 
-## Clone this repository
-
-```
-git clone https://github.com/Miceuz/docker-compose-mosquitto-influxdb-telegraf-grafana.git
-```
-
-## Run it
-
-To download, setup and start all the services run
-```
-cd docker-compose-mosquitto-influxdb-telegraf-grafana
-sudo docker-compose up -d
+Check containers:
+```bash
+docker ps
 ```
 
-To check the running setvices run
-```
-sudo docker ps
-```
-
-To shutdown the whole thing run
-```
-sudo docker-compose down
+Stop everything:
+```bash
+docker compose down
 ```
 
-## Test your setup
+---
 
-Post some messages into your Mosquitto so you'll be able to see some data in Grafana already: 
-```
-sudo docker container exec mosquitto mosquitto_pub -t 'paper_wifi/test/' -m '{"humidity":21, "temperature":21, "battery_voltage_mv":3000}'
-```
+## 🌐 Access the Services
 
-### Grafana
-Open in your browser: 
-`http://<your-server-ip>:3000`
+| Service    | URL                    | Login                  |
+|-------------|------------------------|------------------------|
+| Grafana     | http://localhost:3000  | admin / admin          |
+| InfluxDB    | http://localhost:8086  | user / password1234    |
+| Mosquitto   | tcp://localhost:1883   | anonymous              |
 
-Username and pasword are admin:admin. You should see a graph of the data you have entered with the `mosquitto_pub` command.
+---
 
-### InfluxDB
-You can poke around your InfluxDB setup here:
-`http://<your-server-ip>:8086`
-Username and password are user:password1234
+## ⚙️ Configuration Summary
 
-# Configuration 
-### Mosquitto 
-Mosquitto is configured to allow anonymous connections and posting of messages
+### Mosquitto
+
+Anonymous:
 ```
 listener 1883
 allow_anonymous true
 ```
 
-### InfluxDB 
-The configuration is fully in `docker-compose.yml`. Note the `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN` - you can run a test with the one given, but you better re-generate it for your own security. This same token is repeated in several other config files, you have to update it there also. I did not find an easy way to generate it automagically in docker yet. **Change it before you go live**. You have been warned. Also change the username and password.
+### InfluxDB (from compose)
 ```
-  influxdb:
-    image: influxdb
-    container_name: influxdb
-    restart: always
-    ports:
-      - "8086:8086"
-    networks:
-      - iot
-    volumes:
-      - influxdb-data:/var/lib/influxdb2
-      - influxdb-config:/etc/influxdb2
-    environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=user
-      - DOCKER_INFLUXDB_INIT_PASSWORD=password1234
-      - DOCKER_INFLUXDB_INIT_ORG=some_org
-      - DOCKER_INFLUXDB_INIT_BUCKET=some_data
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=4eYvsu8wZCJ6tKuE2sxvFHkvYFwSMVK0011hEEiojvejzpSaij86vYQomN_12au6eK-2MZ6Knr-Sax201y70w==
-
+DOCKER_INFLUXDB_INIT_USERNAME=user
+DOCKER_INFLUXDB_INIT_PASSWORD=password1234
+DOCKER_INFLUXDB_INIT_ORG=some_org
+DOCKER_INFLUXDB_INIT_BUCKET=some_data
+DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=4eYvsu8wZCJ6tKuE2sxvFHkvYFwSMVK0011hEEiojvejzpSaij86vYQomN_12au6eK-2MZ6Knr-Sax201y70w==
 ```
 
-### Telegraf 
-Telegraf is responsible for piping mqtt messages to influxdb. It is set up to listen for topic `paper_wifi/test`. You can alter this configuration according to your needs, check the official documentation on how to do that. Note the InfluxDB token you have to update.
+### Telegraf
+
+Listens for topics like:
 ```
-[[inputs.mqtt_consumer]]
-  servers = ["tcp://mosquitto:1883"]
-  topics = [
-    "paper_wifi/test/#"
-  ]
-  data_format = "json"
-
-[[outputs.influxdb_v2]]
-  urls = ["http://influxdb:8086"]
-  token = "4eYvsu8wZCJ6tKuE2sxvFHkvYFwSMVK0011hEEiojvejzpSaij86vYQomN_12au6eK-2MZ6Knr-Sax201y70w=="
-  organization = "some_org"
-  bucket = "some_data"
-
+iot/+/+/+/telemetry/#
 ```
 
-### Grafana data source 
-Grafana is provisioned with a default data source pointing to the InfluxDB instance installed in this same compose. The configuration file is `grafana-provisioning/datasources/automatic.yml`. Note the InfluxDB token you have to update. 
-```
-apiVersion: 1
+### Grafana
 
-datasources:
-  - name: InfluxDB_v2_Flux
-    type: influxdb
-    access: proxy
-    url: http://influxdb:8086
-    jsonData:
-      version: Flux
-      organization: some_org
-      defaultBucket: some_data
-      tlsSkipVerify: true
-    secureJsonData:
-      token: 4eYvsu8wZCJ6tKuE2sxvFHkvYFwSMVK0011hEEiojvejzpSaij86vYQomN_12au6eK-2MZ6Knr-Sax201y70w==
+Provisioned from:
+```
+grafana-provisioning/datasources/
+grafana-provisioning/dashboards/
 ```
 
-### Grafana dashboard
-Default Grafana dashboard is also set up in this directory: `grafana-provisioning/dashboards`
+---
 
+## 🧪 Optional — Run the Emulator
+
+The emulator publishes realistic telemetry (BME688 / SPS30 / DP) to MQTT.
+
+### Create & activate venv
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### Install
+```bash
+pip install -r emulator/requirements.txt
+```
+
+### Run
+```bash
+python emulator/mqtt_emulator_subtopics.py   --host 127.0.0.1 --port 1883   --site home1 --room lab   --devices pico2w-01,pico2w-02   --dp-channels 1,2   --interval 5
+```
+
+Use `--host mosquitto` if broker is in compose.
+
+**Topics published**
+```
+iot/<site>/<room>/<device>/telemetry/bme688    # t_c,rh_pct,p_pa,gas_ohm,iaq,voc_index,co2_eq
+iot/<site>/<room>/<device>/telemetry/sps30     # pm1_0,pm2_5,pm4_0,pm10
+iot/<site>/<room>/<device>/telemetry/dp/<ch>   # dp_pa
+iot/<site>/<room>/<device>/status              # retained
+```
+
+---
+
+## 🧩 DP channel mapping (optional)
+
+If you use numeric channels (1,2) but want friendly names (`hepa`,`wafer`) in InfluxDB:
+
+```toml
+[[processors.starlark]]
+  namepass=["diff_pressure"]
+  source = '''
+def apply(metric):
+    ch = metric.tags.get("channel","")
+    if ch=="1": metric.tags["dp_path"]="hepa"
+    elif ch=="2": metric.tags["dp_path"]="wafer"
+    return metric
+'''
+```
+
+Or publish names using `--dp-channels hepa,wafer`.
+
+---
+
+## 🧪 BME688 extra fields in Telegraf
+
+Ensure your `telegraf.conf` includes:
+```toml
+[[inputs.mqtt_consumer.json_v2.field]]
+  path="iaq"
+  type="float"
+[[inputs.mqtt_consumer.json_v2.field]]
+  path="voc_index"
+  type="float"
+[[inputs.mqtt_consumer.json_v2.field]]
+  path="co2_eq"
+  type="float"
+```
+
+---
+
+## 📊 Grafana Dashboards
+
+Dashboards are auto-provisioned from:
+```
+grafana-provisioning/dashboards/
+```
+Recommended views:
+- PM₂.₅ + ΔP dual-axis
+- IAQ vs PM₂.₅ dual-axis
+- VOC / CO₂eq trends
+- Per-device tiles (temperature, humidity, status)
+
+---
+
+## 🧑‍💻 Development tips
+
+Restart services after config changes:
+```bash
+docker compose restart telegraf
+docker compose restart grafana
+docker compose --profile demo up -d
+```
+
+Run emulator again:
+```bash
+. .venv/bin/activate
+python emulator/mqtt_emulator_subtopics.py ...
+```
+
+---
+
+Happy measuring 🚀

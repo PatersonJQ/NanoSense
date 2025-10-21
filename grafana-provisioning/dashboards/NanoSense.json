@@ -1,0 +1,1746 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 0,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 2,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "hide": false,
+          "query": "from(bucket:\"some_data\")\r\n  |> range(start: -10m)\r\n  |> filter(fn:(r)=> r._measurement == \"env_air\" and r._field == \"temperature_c\")\r\n  |> filter(fn:(r)=> r.site == \"${site}\" or \"${site}\" == \"\")\r\n  |> filter(fn:(r)=> r.room == \"${room}\" or \"${room}\" == \"\")\r\n  |> filter(fn:(r)=> ${device:json} == [] or contains(value: r.device, set: ${device:json}))\r\n  |> group(columns: [\"device\"])\r\n  |> last()\r\n  |> map(fn:(r)=>{\r\n      age_ns = uint(v: now()) - uint(v: r._time)\r\n      age_s  = float(v: age_ns) / 1000000000.0\r\n      return { r with age_s: age_s }\r\n  })\r\n  |> filter(fn:(r)=> r.age_s < 30.0)   // “online” threshold\r\n  |> group()                           // collapse to one table\r\n  |> count(column: \"device\")           // -> outputs _value\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Devices Online",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 2,
+        "x": 2,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "from(bucket:\"some_data\")\r\n  |> range(start: -10m)\r\n  |> filter(fn:(r)=> r._measurement == \"env_air\" and r._field == \"temperature_c\")\r\n  |> filter(fn:(r)=> r.site == \"${site}\" or \"${site}\" == \"\")\r\n  |> filter(fn:(r)=> r.room == \"${room}\" or \"${room}\" == \"\")\r\n  |> filter(fn:(r)=> ${device:json} == [] or contains(value: r.device, set: ${device:json}))\r\n  |> group(columns: [\"device\"])\r\n  |> last()\r\n  |> map(fn:(r)=>{\r\n      age_ns = uint(v: now()) - uint(v: r._time)\r\n      age_s  = float(v: age_ns) / 1000000000.0\r\n      return { r with age_s: age_s }\r\n  })\r\n  |> filter(fn:(r)=> r.age_s >= 30.0)\r\n  |> group()\r\n  |> count(column: \"device\")\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Devices offline",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Temperature",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-blue",
+                "value": 0
+              },
+              {
+                "color": "dark-green",
+                "value": 10
+              },
+              {
+                "color": "#EAB839",
+                "value": 15
+              },
+              {
+                "color": "orange",
+                "value": 20
+              },
+              {
+                "color": "dark-red",
+                "value": 25
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 5,
+        "x": 4,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "barRadius": 0.3,
+        "barWidth": 0.75,
+        "fullHighlight": false,
+        "groupWidth": 0.38,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "from(bucket:\"some_data\")\r\n  |> range(start: -1h)\r\n  |> filter(fn:(r)=> r._measurement == \"env_air\" and r._field == \"temperature_c\")\r\n  |> filter(fn:(r)=> r.site == \"${site}\" or \"${site}\" == \"\")\r\n  |> filter(fn:(r)=> r.room == \"${room}\" or \"${room}\" == \"\")\r\n  |> filter(fn:(r)=> ${device:json} == [] or contains(value: r.device, set: ${device:json}))\r\n  |> group(columns: [\"device\"])\r\n  |> last()\r\n  |> keep(columns: [\"device\",\"_value\"])\r\n  |> group()\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Current Temperature per Device",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false,
+            "wrapHeaderText": false,
+            "wrapText": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last_seen"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 195
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 9,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "frameIndex": 0,
+        "showHeader": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "hide": false,
+          "query": "from(bucket:\"some_data\")\r\n  |> range(start: -24h)\r\n  |> filter(fn:(r)=> r._measurement == \"env_air\" and r._field == \"temperature_c\")\r\n  |> filter(fn:(r)=> r.site == \"${site}\" or \"${site}\" == \"\")\r\n  |> filter(fn:(r)=> r.room == \"${room}\" or \"${room}\" == \"\")\r\n  |> filter(fn:(r)=> ${device:json} == [] or contains(value: r.device, set: ${device:json}))\r\n  |> group(columns: [\"device\"])                     // one group per device for last()\r\n  |> last()\r\n  |> map(fn:(r)=>{\r\n      age_ns = uint(v: now()) - uint(v: r._time)\r\n      age_s  = float(v: age_ns) / 1000000000.0\r\n      return {\r\n        device: r.device,\r\n        site: r.site,\r\n        room: r.room,\r\n        last_seen: r._time,\r\n        age_s: age_s,\r\n        online: if age_s < 30.0 then true else false\r\n      }\r\n  })\r\n  |> group()                                        // <— ungroup so Grafana gets ONE table\r\n  |> keep(columns: [\"device\",\"site\",\"room\",\"last_seen\",\"age_s\",\"online\"])\r\n  |> sort(columns: [\"device\"])\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Last Seen per Device",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "conμgm3"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*ΔP$"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit",
+                "value": "pressurepa"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 9,
+        "x": 0,
+        "y": 9
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "timezone": [
+          ""
+        ],
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "pm = from(bucket:\"some_data\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn:(r)=> r._measurement==\"air_particles\" and r._field==\"pm2_5\")\r\n  |> filter(fn:(r)=> r.site==\"${site}\" or \"${site}\"==\"\")\r\n  |> filter(fn:(r)=> r.room==\"${room}\" or \"${room}\"==\"\")\r\n  |> filter(fn:(r)=> ${device:json}==[] or contains(value:r.device,set:${device:json}))\r\n  |> aggregateWindow(every:v.windowPeriod, fn: mean, createEmpty:false)\r\n  |> keep(columns:[\"_time\",\"_value\",\"device\"])\r\n  |> map(fn:(r)=> ({ r with label: r.device + \" • PM2.5\" }))\r\n\r\ndp = from(bucket:\"some_data\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn:(r)=> r._measurement==\"diff_pressure\" and r._field==\"dp_pa\" and r.dp_path==\"${dp_path}\")\r\n  |> filter(fn:(r)=> r.site==\"${site}\" or \"${site}\"==\"\")\r\n  |> filter(fn:(r)=> r.room==\"${room}\" or \"${room}\"==\"\" )\r\n  |> filter(fn:(r)=> ${device:json}==[] or contains(value:r.device,set:${device:json}))\r\n  |> aggregateWindow(every:v.windowPeriod, fn: mean, createEmpty:false)\r\n  |> keep(columns:[\"_time\",\"_value\",\"device\"])\r\n  |> map(fn:(r)=> ({ r with label: r.device + \" • ΔP\" }))\r\n\r\nunion(tables:[pm,dp])\r\n  |> keep(columns:[\"_time\",\"_value\",\"label\"])\r\n  |> pivot(rowKey:[\"_time\"], columnKey:[\"label\"], valueColumn:\"_value\")\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Dual-axis time series: PM2.5 vs ΔP (${dp_path})",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 9,
+        "y": 9
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "hepa = from(bucket:\"some_data\")\r\n  |> range(start:v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn:(r)=> r._measurement==\"diff_pressure\" and r._field==\"dp_pa\" and r.dp_path==\"hepa\")\r\n  |> filter(fn:(r)=> r.site==\"${site}\" or \"${site}\"==\"\")\r\n  |> filter(fn:(r)=> r.room==\"${room}\" or \"${room}\"==\"\")\r\n  |> filter(fn:(r)=> ${device:json}==[] or contains(value:r.device,set:${device:json}))\r\n  |> aggregateWindow(every:v.windowPeriod, fn: mean, createEmpty:false)\r\n  |> rename(columns:{_value:\"hepa\"})\r\n  |> keep(columns:[\"_time\",\"device\",\"hepa\"])\r\n\r\nwafer = from(bucket:\"some_data\")\r\n  |> range(start:v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn:(r)=> r._measurement==\"diff_pressure\" and r._field==\"dp_pa\" and r.dp_path==\"wafer\")\r\n  |> filter(fn:(r)=> r.site==\"${site}\" or \"${site}\"==\"\")\r\n  |> filter(fn:(r)=> r.room==\"${room}\" or \"${room}\"==\"\")\r\n  |> filter(fn:(r)=> ${device:json}==[] or contains(value:r.device,set:${device:json}))\r\n  |> aggregateWindow(every:v.windowPeriod, fn: mean, createEmpty:false)\r\n  |> rename(columns:{_value:\"wafer\"})\r\n  |> keep(columns:[\"_time\",\"device\",\"wafer\"])\r\n\r\njoin(tables:{a:hepa, b:wafer}, on:[\"_time\",\"device\"])\r\n  |> map(fn:(r)=> ({ r with _value: r.hepa - r.wafer }))\r\n  |> keep(columns:[\"_time\",\"_value\",\"device\"])\r\n  |> group(columns:[\"device\"])\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Derived signal: ΔP(HEPA) − ΔP(WAFER)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "conμgm3"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 21,
+        "x": 0,
+        "y": 18
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "pmFields = [\"pm1_0\",\"pm2_5\",\"pm4_0\",\"pm10\"]\r\n\r\nfrom(bucket:\"some_data\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn:(r)=> r._measurement == \"air_particles\")\r\n  |> filter(fn:(r)=> contains(value: r._field, set: pmFields))\r\n  |> filter(fn:(r)=> r.site == \"${site}\" or \"${site}\" == \"\")\r\n  |> filter(fn:(r)=> r.room == \"${room}\" or \"${room}\" == \"\")\r\n  |> filter(fn:(r)=> ${device:json} == [] or contains(value:r.device,set:${device:json}))\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty:false)\r\n  |> keep(columns:[\"device\",\"_field\",\"_time\",\"_value\"])\r\n  |> group(columns:[\"device\",\"_field\"])\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "PMs by device",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "conμgm3"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 9,
+        "x": 0,
+        "y": 30
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "from(bucket:\"some_data\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn:(r)=> r._measurement == \"air_particles\" and r._field == \"pm1_0\")\r\n  |> filter(fn:(r)=> r.site == \"${site}\" or \"${site}\" == \"\")\r\n  |> filter(fn:(r)=> r.room == \"${room}\" or \"${room}\" == \"\")\r\n  |> filter(fn:(r)=> ${device:json} == [] or contains(value:r.device,set:${device:json}))\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> keep(columns:[\"device\",\"_time\",\"_value\"])\r\n  |> group(columns:[\"device\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "PM1.0",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "conμgm3"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 9,
+        "y": 30
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "from(bucket:\"some_data\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn:(r)=> r._measurement == \"air_particles\" and r._field == \"pm2_5\")\r\n  |> filter(fn:(r)=> r.site == \"${site}\" or \"${site}\" == \"\")\r\n  |> filter(fn:(r)=> r.room == \"${room}\" or \"${room}\" == \"\")\r\n  |> filter(fn:(r)=> ${device:json} == [] or contains(value:r.device,set:${device:json}))\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> keep(columns:[\"device\",\"_time\",\"_value\"])\r\n  |> group(columns:[\"device\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "PM2.5",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 9,
+        "x": 0,
+        "y": 38
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "from(bucket:\"some_data\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn:(r)=> r._measurement == \"air_particles\" and r._field == \"pm4_0\")\r\n  |> filter(fn:(r)=> r.site == \"${site}\" or \"${site}\" == \"\")\r\n  |> filter(fn:(r)=> r.room == \"${room}\" or \"${room}\" == \"\")\r\n  |> filter(fn:(r)=> ${device:json} == [] or contains(value:r.device,set:${device:json}))\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> keep(columns:[\"device\",\"_time\",\"_value\"])\r\n  |> group(columns:[\"device\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "PM4.0",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "conμgm3"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 9,
+        "y": 38
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "from(bucket:\"some_data\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn:(r)=> r._measurement == \"air_particles\" and r._field == \"pm10\")\r\n  |> filter(fn:(r)=> r.site == \"${site}\" or \"${site}\" == \"\")\r\n  |> filter(fn:(r)=> r.room == \"${room}\" or \"${room}\" == \"\")\r\n  |> filter(fn:(r)=> ${device:json} == [] or contains(value:r.device,set:${device:json}))\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> keep(columns:[\"device\",\"_time\",\"_value\"])\r\n  |> group(columns:[\"device\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "PM10",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ppm"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 9,
+        "x": 0,
+        "y": 46
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "from(bucket:\"some_data\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn:(r)=> r._measurement==\"env_air\" and r._field==\"co2_eq\")\r\n  |> filter(fn:(r)=> r.site==\"${site}\" or \"${site}\"==\"\")\r\n  |> filter(fn:(r)=> r.room==\"${room}\" or \"${room}\"==\"\")\r\n  |> filter(fn:(r)=> ${device:json}==[] or contains(value:r.device,set:${device:json}))\r\n  |> aggregateWindow(every:v.windowPeriod, fn: mean, createEmpty:false)\r\n  |> keep(columns:[\"_time\",\"_value\",\"device\"])\r\n  |> group(columns:[\"device\"])\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "CO₂eq trend (per device)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 9,
+        "y": 46
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "from(bucket:\"some_data\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn:(r)=> r._measurement==\"env_air\" and r._field==\"voc_index\")\r\n  |> filter(fn:(r)=> r.site==\"${site}\" or \"${site}\"==\"\")\r\n  |> filter(fn:(r)=> r.room==\"${room}\" or \"${room}\"==\"\")\r\n  |> filter(fn:(r)=> ${device:json}==[] or contains(value:r.device,set:${device:json}))\r\n  |> aggregateWindow(every:v.windowPeriod, fn: mean, createEmpty:false)\r\n  |> keep(columns:[\"_time\",\"_value\",\"device\"])\r\n  |> group(columns:[\"device\"])\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "VOC index trend (per device)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "conμgm3"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".* IAQ$"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 9,
+        "x": 0,
+        "y": 54
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "pm = from(bucket:\"some_data\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn:(r)=> r._measurement==\"air_particles\" and r._field==\"pm2_5\")\r\n  |> filter(fn:(r)=> r.site==\"${site}\" or \"${site}\"==\"\")\r\n  |> filter(fn:(r)=> r.room==\"${room}\" or \"${room}\"==\"\")\r\n  |> filter(fn:(r)=> ${device:json}==[] or contains(value:r.device,set:${device:json}))\r\n  |> aggregateWindow(every:v.windowPeriod, fn: mean, createEmpty:false)\r\n  |> keep(columns:[\"_time\",\"_value\",\"device\"])\r\n  |> map(fn:(r)=> ({ r with label: r.device + \" • PM2.5\" }))\r\n\r\niaq = from(bucket:\"some_data\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn:(r)=> r._measurement==\"env_air\" and r._field==\"iaq\")\r\n  |> filter(fn:(r)=> r.site==\"${site}\" or \"${site}\"==\"\")\r\n  |> filter(fn:(r)=> r.room==\"${room}\" or \"${room}\"==\"\")\r\n  |> filter(fn:(r)=> ${device:json}==[] or contains(value:r.device,set:${device:json}))\r\n  |> aggregateWindow(every:v.windowPeriod, fn: mean, createEmpty:false)\r\n  |> keep(columns:[\"_time\",\"_value\",\"device\"])\r\n  |> map(fn:(r)=> ({ r with label: r.device + \" • IAQ\" }))\r\n\r\nunion(tables:[pm, iaq])\r\n  |> keep(columns:[\"_time\",\"_value\",\"label\"])\r\n  |> pivot(rowKey:[\"_time\"], columnKey:[\"label\"], valueColumn:\"_value\")\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "IAQ vs PM2.5",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 9,
+        "y": 54
+      },
+      "id": 16,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "from(bucket:\"some_data\")\r\n  |> range(start: -1h)\r\n  |> filter(fn:(r)=> r._measurement==\"env_air\" and r._field==\"voc_index\")\r\n  |> filter(fn:(r)=> r.site==\"${site}\" or \"${site}\"==\"\")\r\n  |> filter(fn:(r)=> r.room==\"${room}\" or \"${room}\"==\"\")\r\n  |> filter(fn:(r)=> ${device:json}==[] or contains(value:r.device,set:${device:json}))\r\n  |> group(columns:[\"device\"])\r\n  |> last()\r\n  |> keep(columns:[\"device\",\"_value\"])\r\n  |> group()\r\n  |> rename(columns:{_value: \"VOC index\"})\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "VOC index now",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "ppm"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 9,
+        "x": 0,
+        "y": 62
+      },
+      "id": 17,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "from(bucket:\"some_data\")\r\n  |> range(start: -1h)\r\n  |> filter(fn:(r)=> r._measurement==\"env_air\" and r._field==\"co2_eq\")\r\n  |> filter(fn:(r)=> r.site==\"${site}\" or \"${site}\"==\"\")\r\n  |> filter(fn:(r)=> r.room==\"${room}\" or \"${room}\"==\"\")\r\n  |> filter(fn:(r)=> ${device:json}==[] or contains(value:r.device,set:${device:json}))\r\n  |> group(columns:[\"device\"])\r\n  |> last()\r\n  |> keep(columns:[\"device\",\"_value\"])\r\n  |> group()\r\n  |> rename(columns:{_value: \"CO₂eq\"})\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "CO₂eq now",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P5697886F9CA74929"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "super-light-green",
+                "value": 0
+              },
+              {
+                "color": "dark-green",
+                "value": 51
+              },
+              {
+                "color": "yellow",
+                "value": 101
+              },
+              {
+                "color": "orange",
+                "value": 151
+              },
+              {
+                "color": "dark-red",
+                "value": 201
+              },
+              {
+                "color": "#8b008b",
+                "value": 251
+              },
+              {
+                "color": "#290100",
+                "value": 500
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 9,
+        "y": 62
+      },
+      "id": 15,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P5697886F9CA74929"
+          },
+          "query": "from(bucket:\"some_data\")\r\n  |> range(start: -1h)\r\n  |> filter(fn:(r)=> r._measurement==\"env_air\" and r._field==\"iaq\")\r\n  |> filter(fn:(r)=> r.site==\"${site}\" or \"${site}\"==\"\")\r\n  |> filter(fn:(r)=> r.room==\"${room}\" or \"${room}\"==\"\")\r\n  |> filter(fn:(r)=> ${device:json}==[] or contains(value:r.device,set:${device:json}))\r\n  |> group(columns:[\"device\"])\r\n  |> last()\r\n  |> keep(columns:[\"device\",\"_value\"])\r\n  |> group()\r\n   |> rename(columns:{_value: \"IAQ\"})\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Current IAQ",
+      "type": "barchart"
+    }
+  ],
+  "preload": false,
+  "schemaVersion": 42,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": [
+            "home1"
+          ],
+          "value": [
+            "home1"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P5697886F9CA74929"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\nschema.tagValues(\r\n  bucket: \"some_data\",\r\n  tag: \"site\",\r\n  predicate: (r) => r._measurement == \"env_air\",\r\n  start: -30d\r\n)",
+        "includeAll": true,
+        "label": "site",
+        "multi": true,
+        "name": "site",
+        "options": [],
+        "query": {
+          "query": "import \"influxdata/influxdb/schema\"\r\nschema.tagValues(\r\n  bucket: \"some_data\",\r\n  tag: \"site\",\r\n  predicate: (r) => r._measurement == \"env_air\",\r\n  start: -30d\r\n)"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": [
+            "lab"
+          ],
+          "value": [
+            "lab"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P5697886F9CA74929"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\nschema.tagValues(\r\n  bucket: \"some_data\",\r\n  tag: \"room\",\r\n  predicate: (r) => r._measurement == \"env_air\",\r\n  start: -30d\r\n)",
+        "includeAll": true,
+        "label": "room",
+        "multi": true,
+        "name": "room",
+        "options": [],
+        "query": {
+          "query": "import \"influxdata/influxdb/schema\"\r\nschema.tagValues(\r\n  bucket: \"some_data\",\r\n  tag: \"room\",\r\n  predicate: (r) => r._measurement == \"env_air\",\r\n  start: -30d\r\n)"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P5697886F9CA74929"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\nschema.tagValues(\r\n  bucket: \"some_data\",\r\n  tag: \"device\",\r\n  predicate: (r) => r._measurement == \"env_air\",\r\n  start: -30d\r\n)",
+        "includeAll": true,
+        "label": "device",
+        "multi": true,
+        "name": "device",
+        "options": [],
+        "query": {
+          "query": "import \"influxdata/influxdb/schema\"\r\nschema.tagValues(\r\n  bucket: \"some_data\",\r\n  tag: \"device\",\r\n  predicate: (r) => r._measurement == \"env_air\",\r\n  start: -30d\r\n)"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": [
+            "1",
+            "2"
+          ],
+          "value": [
+            "1",
+            "2"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P5697886F9CA74929"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\nschema.tagValues(\r\n  bucket: \"some_data\",\r\n  tag: \"channel\",\r\n  predicate: (r) => r._measurement == \"diff_pressure\",\r\n  start: -30d\r\n)",
+        "includeAll": true,
+        "label": "channel",
+        "multi": true,
+        "name": "channel",
+        "options": [],
+        "query": {
+          "query": "import \"influxdata/influxdb/schema\"\r\nschema.tagValues(\r\n  bucket: \"some_data\",\r\n  tag: \"channel\",\r\n  predicate: (r) => r._measurement == \"diff_pressure\",\r\n  start: -30d\r\n)"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "hepa",
+          "value": "hepa"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P5697886F9CA74929"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\nschema.tagValues(\r\n  bucket: \"some_data\",\r\n  tag: \"dp_path\",\r\n  predicate: (r) => r._measurement == \"diff_pressure\",\r\n  start: -30d\r\n)",
+        "label": "dp_path",
+        "name": "dp_path",
+        "options": [],
+        "query": {
+          "query": "import \"influxdata/influxdb/schema\"\r\nschema.tagValues(\r\n  bucket: \"some_data\",\r\n  tag: \"dp_path\",\r\n  predicate: (r) => r._measurement == \"diff_pressure\",\r\n  start: -30d\r\n)"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "NanoSense",
+  "uid": "adqjmxj",
+  "version": 9
+}
