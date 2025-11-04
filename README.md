@@ -134,12 +134,12 @@ source .venv/bin/activate
 
 ### Install
 ```bash
-pip install -r emulator/requirements.txt
+python3 -m pip install -r emulator/requirements.txt
 ```
 
 ### Run
 ```bash
-python emulator/mqtt_emulator_subtopics.py   --host 127.0.0.1 --port 1883   --site home1 --room lab   --devices pico2w-01,pico2w-02   --dp-channels 1,2   --interval 5
+python emulator/mqtt_emulator.py   --host 127.0.0.1 --port 1883   --site home1 --room lab   --devices pico2w-01,pico2w-02   --dp-channels 1,2   --interval 5
 ```
 
 Use `--host mosquitto` if broker is in compose.
