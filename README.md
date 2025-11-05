@@ -53,6 +53,9 @@ It supports any MQTT-capable device and includes an optional Python-based **emul
 
 Windows Docker Desktop App
 
+[Instructions for linking Docker to WSL2](https://docs.docker.com/desktop/features/wsl/#:~:text=When%20Docker%20Desktop%20starts%2C%20go,Settings%20%3E%20Resources%20%3E%20WSL%20Integration.&text=If%20WSL%20integrations%20isn't,Select%20Apply.
+)
+
 ### 2️⃣ Clone & Start the Stack
 
 ```bash
@@ -60,7 +63,7 @@ git clone https://github.com/PatersonJQ/NanoSense.git
 cd nanosense
 -------- No Demo Data --------
 docker compose up -d
---------Demo Date --------
+--------Demo Data --------
 docker compose --profile demo up -d
 ```
 
@@ -77,6 +80,9 @@ docker compose down
 ---
 
 ## 🌐 Access the Services
+
+*FOR TESTING ONLY*
+*CREDINTIALS TO BE CHANGED BEFORE DEPLOYMENT*
 
 | Service    | URL                    | Login                  |
 |-------------|------------------------|------------------------|
