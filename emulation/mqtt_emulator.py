@@ -123,11 +123,47 @@ class DeviceEmulator:
             bump = random.uniform(10, 30)
             self.pm25.v = clamp(self.pm25.v + bump, 0, 200)
             self.pm10.v = clamp(self.pm10.v + bump * 1.2, 0, 300)
+
+        # Advance the random walks once for this sample
+        pm1 = self.pm1.next()
+        pm25 = self.pm25.next()
+        pm4 = self.pm4.next()
+        pm10 = self.pm10.next()
+
+        # --- synthetic particle counts per cm³ ---
+        # crude relationship: more mass -> more counts
+        base_count = max(pm25, 1.0) * 3000.0  # tweak factor to taste
+
+        pc0_5  = base_count * 0.75
+        pc1_0  = base_count * 0.90
+        pc2_5  = base_count * 0.95
+        pc4_0  = base_count * 0.98
+        pc10_0 = base_count * 1.00
+
+        # --- typical particle size (µm) ---
+        # rough coupling to pm2.5 / pm1.0 ratio
+        ratio = pm25 / pm1 if pm1 > 0 else 2.0
+        ratio = clamp(ratio, 1.0, 4.0)
+        typical = 0.4 + (ratio - 1.0) * 0.1  # ~0.4–0.7 µm
+
+
         return {
-            "pm1_0": round(self.pm1.next(), 1),
-            "pm2_5": round(self.pm25.next(), 1),
-            "pm4_0": round(self.pm4.next(), 1),
-            "pm10": round(self.pm10.next(), 1),
+            # mass concentrations (µg/m³)
+            "pm1_0": round(pm1, 1),
+            "pm2_5": round(pm25, 1),
+            "pm4_0": round(pm4, 1),
+            "pm10":  round(pm10, 1),
+
+            # particle counts (#/cm³)
+            "pc0_5": round(pc0_5, 2),
+            "pc1_0": round(pc1_0, 2),
+            "pc2_5": round(pc2_5, 2),
+            "pc4_0": round(pc4_0, 2),
+            "pc10_0": round(pc10_0, 2),
+
+            # typical particle size (µm)
+            "typical_um": round(typical, 2),
+
             "ts": ts,
         }
 
